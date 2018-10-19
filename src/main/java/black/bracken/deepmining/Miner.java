@@ -2,6 +2,7 @@ package black.bracken.deepmining;
 
 import black.bracken.deepmining.event.RelationalBlockBreakEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -17,12 +18,14 @@ public final class Miner {
     private static final int maxDepth;
     private static final long mineDelay;
     private static final Set<BlockFace> relationSet;
+    private static final Set<Material> oreMaterialSet;
 
     static {
         instance = DeepMining.getInstance();
         maxDepth = instance.getMaxDepth();
         mineDelay = instance.getMineDelay();
         relationSet = instance.getRelationSet();
+        oreMaterialSet = instance.getOreMaterialSet();
     }
 
     private final Block broken;
@@ -38,7 +41,7 @@ public final class Miner {
     }
 
     private void mineRelations(Block broken, Player breaker, int depth) {
-        if (maxDepth <= depth) return;
+        if (maxDepth <= depth || !oreMaterialSet.contains(broken.getType())) return;
 
         RelationalBlockBreakEvent event = new RelationalBlockBreakEvent(broken, breaker, depth);
         instance.getServer().getPluginManager().callEvent(event);

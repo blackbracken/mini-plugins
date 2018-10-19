@@ -1,12 +1,14 @@
 package black.bracken.deepmining;
 
 import black.bracken.deepmining.listener.BlockBreak;
+import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author BlackBracken
@@ -45,6 +47,12 @@ public final class DeepMining extends JavaPlugin {
         return new HashSet<>(Arrays.asList(
                 BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.UP, BlockFace.DOWN
         ));
+    }
+
+    /* package */ Set<Material> getOreMaterialSet() {
+        return Arrays.stream(Material.values())
+                .filter(material -> material.name().endsWith("_ORE"))
+                .collect(Collectors.toSet());
     }
 
 }
