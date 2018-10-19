@@ -17,9 +17,24 @@ public final class DeepMining extends JavaPlugin {
 
     private static DeepMining instance;
 
+    private int maxDepth;
+    private long mineDelay;
+    private Set<BlockFace> relationSet;
+    private Set<Material> oreMaterialSet;
+
     @Override
     public void onEnable() {
         instance = this;
+
+        // get below params from configuration if needed
+        this.maxDepth = 100;
+        this.mineDelay = 1L;
+        this.relationSet = new HashSet<>(Arrays.asList(
+                BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.UP, BlockFace.DOWN
+        ));
+        this.oreMaterialSet = Arrays.stream(Material.values())
+                .filter(material -> material.name().endsWith("_ORE"))
+                .collect(Collectors.toSet());
 
         getServer().getPluginManager().registerEvents(new BlockBreak(), this);
     }
@@ -33,26 +48,20 @@ public final class DeepMining extends JavaPlugin {
         return instance;
     }
 
-    // get below params from configuration if needed
-
     /* package */ int getMaxDepth() {
-        return 100;
+        return this.maxDepth;
     }
 
     /* package */ long getMineDelay() {
-        return 1L;
+        return this.mineDelay;
     }
 
     /* package */ Set<BlockFace> getRelationSet() {
-        return new HashSet<>(Arrays.asList(
-                BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH, BlockFace.NORTH, BlockFace.UP, BlockFace.DOWN
-        ));
+        return this.relationSet;
     }
 
     /* package */ Set<Material> getOreMaterialSet() {
-        return Arrays.stream(Material.values())
-                .filter(material -> material.name().endsWith("_ORE"))
-                .collect(Collectors.toSet());
+        return this.oreMaterialSet;
     }
 
 }
