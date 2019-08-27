@@ -1,6 +1,7 @@
 package black.bracken.airfoil.workers;
 
 import black.bracken.airfoil.BukkitTaskWorker;
+import black.bracken.airfoil.util.PlayerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
@@ -23,7 +24,7 @@ public final class AccelerationWorker implements BukkitTaskWorker {
         return Bukkit.getServer().getScheduler().runTaskTimer(plugin,
                 () -> Bukkit.getOnlinePlayers()
                         .stream()
-                        .filter(AccelerationWorker::isClimbing)
+                        .filter(PlayerUtil::isClimbing)
                         .forEach(player -> {
                             Vector acceleration = calcAcceleration(player);
 
@@ -36,10 +37,6 @@ public final class AccelerationWorker implements BukkitTaskWorker {
     private Vector calcAcceleration(Player player) {
         Vector direction = player.getEyeLocation().getDirection();
         return direction.clone().multiply(speed * (shouldShiftSpeed ? direction.getY() : 1.0));
-    }
-
-    private static boolean isClimbing(Player player) {
-        return player.isGliding() && 0.25 < player.getEyeLocation().getDirection().getY();
     }
 
 }
