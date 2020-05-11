@@ -1,0 +1,17 @@
+Enable:
+  Default: true
+  ForceAlways: false
+  WhenSneaking: false
+  WhenNotSneaking: true
+
+LimitCutters: true
+
+Cutters:
+  - AIR
+  - DIAMOND_AXE
+  - GOLDEN_AXE
+  - IRON_AXE
+  - STONE_AXE
+  - WOODEN_AXE
+
+ReplantSaplings: true
