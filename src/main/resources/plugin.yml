@@ -1,0 +1,6 @@
+name: Oakin
+version: @version@
+main: black.bracken.oakin.Oakin
+api-version: 1.13
+authors: [BlackBracken]
+description: A plugin to cut down trees easier
