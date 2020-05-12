@@ -1,11 +1,11 @@
 Enable:
   Default: true
-  ForceAlways: false
   WhenSneaking: false
   WhenNotSneaking: true
 
-LimitCutters: true
+CuttingInterval: 2
 
+LimitTools: true
 Cutters:
   - AIR
   - DIAMOND_AXE

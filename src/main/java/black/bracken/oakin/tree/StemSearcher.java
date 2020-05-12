@@ -8,10 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public final class StemSearcher {
 
@@ -113,12 +110,12 @@ public final class StemSearcher {
         // omit getters because the fields are readonly.
         public final Map<Integer, Set<Block>> cutLogMap;
         public final Map<Integer, Set<Block>> cutLeaveMap;
-        public final Set<Block> bottomBlockSet;
+        public final List<Block> bottomBlockList;
 
-        Result(Map<Integer, Set<Block>> cutLogMap, Map<Integer, Set<Block>> cutLeaveMap, Set<Block> bottomBlockSet) {
+        Result(Map<Integer, Set<Block>> cutLogMap, Map<Integer, Set<Block>> cutLeaveMap, List<Block> bottomBlockList) {
             this.cutLogMap = cutLogMap;
             this.cutLeaveMap = cutLeaveMap;
-            this.bottomBlockSet = bottomBlockSet;
+            this.bottomBlockList = bottomBlockList;
         }
     }
 

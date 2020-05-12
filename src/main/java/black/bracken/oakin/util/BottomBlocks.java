@@ -2,11 +2,11 @@ package black.bracken.oakin.util;
 
 import org.bukkit.block.Block;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class BottomBlocks {
-    private Set<Block> blocks = new HashSet<>();
+    private List<Block> blocks = new ArrayList<>();
     private int bottomY = 256;
 
     public void addIfInBottom(Block block) {
@@ -14,7 +14,7 @@ public final class BottomBlocks {
 
         if (y < bottomY) {
             bottomY = y;
-            blocks = new HashSet<>();
+            blocks = new ArrayList<>();
         }
 
         if (y <= bottomY) {
@@ -22,7 +22,7 @@ public final class BottomBlocks {
         }
     }
 
-    public Set<Block> getBlocks() {
+    public List<Block> getBlocks() {
         return this.blocks;
     }
 
