@@ -1,5 +1,10 @@
 # Oakin
--- Odin (is said to have broken a branch of Yggdrasil) + Oak.
+-- _Odin (is said to have broken a branch of Yggdrasil) + Oak._
+
+## About
+Spigot 1.15以降に対応した簡素な樵プラグイン.
+
+<img src="https://raw.githubusercontent.com/blackbracken/Oakin/master/cap.gif" width="70%" height="70%">
 
 ## Config(ja)
 ```yaml
@@ -26,5 +31,15 @@ Cutters:
   - STONE_AXE
   - WOODEN_AXE
 
+# 植えなおすか否か
 ReplantSaplings: true
 ```
+
+## Permissions
+
+|パーミッション|効果|
+|:-:|:-:|
+|`orkin.toggle`|トグルコマンドの利用|
+
+## License
+GPLv3 (viral license because of Bukkit)
