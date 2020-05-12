@@ -35,6 +35,15 @@ Cutters:
 ReplantSaplings: true
 ```
 
+## Releases
+ダウンロードは[releases](https://github.com/blackbracken/Oakin/releases)へ
+
+## Commands
+
+|コマンド|機能|
+|:-:|:-:|
+|`/orkin`|木こり機能のトグル|
+
 ## Permissions
 
 |パーミッション|効果|
