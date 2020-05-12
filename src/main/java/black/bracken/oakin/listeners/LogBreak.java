@@ -1,7 +1,7 @@
-package black.bracken.oakin.listener;
+package black.bracken.oakin.listeners;
 
 import black.bracken.oakin.Oakin;
-import black.bracken.oakin.repository.OakinRule;
+import black.bracken.oakin.repository.OakinRestrictor;
 import black.bracken.oakin.tree.StemSearcher;
 import black.bracken.oakin.util.TreeUtil;
 import org.bukkit.Material;
@@ -37,10 +37,10 @@ public final class LogBreak implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlock();
         Material logMaterial = event.getBlock().getType();
-        OakinRule rule = instance.getRule();
+        OakinRestrictor restrictor = instance.getRestrictor();
 
         if (TreeUtil.isNotLog(logMaterial)) return;
-        if (!rule.shouldCutDown(player)) return;
+        if (!restrictor.shouldCutDown(player)) return;
 
         BukkitScheduler scheduler = instance.getServer().getScheduler();
         scheduler.runTaskAsynchronously(instance, () -> {
@@ -51,14 +51,14 @@ public final class LogBreak implements Listener {
                     .forEach(entry -> scheduler.runTaskLater(
                             instance,
                             () -> entry.getValue().forEach(this::breakLogOnce),
-                            rule.getCuttingInterval() * entry.getKey()
+                            restrictor.getCuttingInterval() * entry.getKey()
                     ));
             result.cutLeaveMap.entrySet().stream()
                     .sorted(Comparator.comparingInt(Map.Entry::getKey))
                     .forEach(entry -> scheduler.runTaskLater(
                             instance,
                             () -> entry.getValue().forEach(this::breakLeavesOnce),
-                            rule.getCuttingInterval() * entry.getKey()
+                            restrictor.getCuttingInterval() * entry.getKey()
                     ));
 
             boolean hasEnoughLeavesToReplant = result.cutLeaveMap.values().stream()
@@ -66,14 +66,14 @@ public final class LogBreak implements Listener {
                     .distinct()
                     .limit(MIN_LEAVES_TO_REPLANT)
                     .count() == MIN_LEAVES_TO_REPLANT;
-            if (rule.shouldReplantSaplings() && hasEnoughLeavesToReplant) {
+            if (restrictor.shouldReplantSaplings() && hasEnoughLeavesToReplant) {
                 result.bottomBlockList.stream()
                         .filter(bottom -> TreeUtil.NURSERY_MATERIAL_LIST.contains(bottom.getRelative(BlockFace.DOWN).getType()))
                         .limit(MAX_AMOUNT_OF_SAPLINGS_REPLANTED)
                         .forEach(bottom -> scheduler.runTaskLater(
                                 instance,
                                 () -> TreeUtil.findSaplingOf(logMaterial).ifPresent(sapling -> plantSapling(bottom, sapling)),
-                                rule.getCuttingInterval() * (result.cutLogMap.keySet().size() + 1)
+                                restrictor.getCuttingInterval() * (result.cutLogMap.keySet().size() + 1)
                         ));
             }
         });

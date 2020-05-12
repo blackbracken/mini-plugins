@@ -1,17 +1,24 @@
 package black.bracken.oakin.repository;
 
+import black.bracken.oakin.Oakin;
 import org.bukkit.entity.Player;
 
-public final class OakinRule {
+public final class OakinRestrictor {
 
+    private final Oakin instance;
     private final OakinConfig config;
 
-    public OakinRule(OakinConfig config) {
-        this.config = config;
+    public OakinRestrictor(Oakin instance) {
+        this.instance = instance;
+        this.config = new OakinConfig(instance);
     }
 
     public boolean shouldCutDown(Player player) {
         if (config.limitsTools && !config.setOfCutterMaterials.contains(player.getInventory().getItemInMainHand().getType())) {
+            return false;
+        }
+
+        if (!instance.getToggleStateHolder().get(player, config.shouldCutDownDefault)) {
             return false;
         }
 
@@ -27,6 +34,10 @@ public final class OakinRule {
 
     public boolean shouldReplantSaplings() {
         return config.shouldReplantSaplings;
+    }
+
+    public OakinConfig getRawConfig() {
+        return this.config;
     }
 
 }
