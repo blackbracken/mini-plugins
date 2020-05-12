@@ -16,8 +16,8 @@ public final class XYZTuple {
     public boolean equals(Object object) {
         if (!(object instanceof XYZTuple)) return false;
 
-        XYZTuple other = (XYZTuple) object;
-        return this.x == other.x && this.y == other.y && this.z == other.z;
+        XYZTuple that = (XYZTuple) object;
+        return this.x == that.x && this.y == that.y && this.z == that.z;
     }
 
     @Override

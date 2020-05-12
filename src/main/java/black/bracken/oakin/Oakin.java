@@ -1,29 +1,25 @@
 package black.bracken.oakin;
 
-import black.bracken.oakin.listener.BlockBreak;
+import black.bracken.oakin.listener.LogBreak;
+import black.bracken.oakin.repository.OakinConfig;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.stream.Stream;
 
 public final class Oakin extends JavaPlugin {
 
-    private static Oakin instance;
+    public OakinConfig config;
 
     @Override
     public void onEnable() {
-        instance = this;
+        this.config = new OakinConfig(this);
 
-        Stream.of(new BlockBreak())
+        Stream.of(new LogBreak(this))
                 .forEach(listener -> this.getServer().getPluginManager().registerEvents(listener, this));
     }
 
-    @Override
-    public void onDisable() {
-        instance = null;
-    }
-
-    public static Oakin getInstance() {
-        return Oakin.instance;
+    public OakinConfig getOakinConfig() {
+        return this.config;
     }
 
 }

@@ -3,6 +3,7 @@ package black.bracken.oakin.repository;
 import black.bracken.oakin.Oakin;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Set;
@@ -15,11 +16,26 @@ public final class OakinConfig {
     private final FileConfiguration config;
     private final Logger logger;
 
-    /* package */ OakinConfig(Oakin instance) {
+    public OakinConfig(Oakin instance) {
         instance.saveDefaultConfig();
 
         this.config = instance.getConfig();
         this.logger = instance.getLogger();
+    }
+
+    public boolean shouldCut(Player player) {
+        if (shouldLimitTools()) {
+            if (!getSetOfCutterMaterials().contains(player.getInventory().getItemInMainHand().getType())) {
+                return false;
+            }
+        }
+
+        if (forcesDefault()) return shouldCutDefault();
+
+        if (player.isSneaking() && shouldCutWhenSneaking()) return true;
+        if (!player.isSneaking() && shouldCutWhenNotSneaking()) return true;
+
+        return shouldCutDefault();
     }
 
     public boolean shouldCutDefault() {

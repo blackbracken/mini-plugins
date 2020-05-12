@@ -13,14 +13,13 @@ public final class OakinCutter {
     private final Map<Integer, Set<Block>> reserveMap;
     private final Set<XYZTuple> visitedSet;
     private final Material logMaterial;
-
     private final Oakin instance;
 
-    public OakinCutter(Material material) {
+    public OakinCutter(Material material, Oakin instance) {
         this.reserveMap = new HashMap<>();
         this.visitedSet = new HashSet<>();
         this.logMaterial = material;
-        this.instance = Oakin.getInstance();
+        this.instance = instance;
     }
 
     public void cutDown(Block begin, Player player) {
@@ -51,7 +50,7 @@ public final class OakinCutter {
                 if (x == 0 && z == 0) continue;
 
                 Block wouldLeaves = block.getRelative(x, 0, z);
-                if (wouldLeaves.getType().getKey().getKey().toUpperCase().endsWith("_LEAVES")) {
+                if (isLeaves(wouldLeaves)) {
                     wouldLeaves.breakNaturally();
                 }
             }
@@ -69,8 +68,9 @@ public final class OakinCutter {
     private void searchCircularly(int order, Block center, int modY) {
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
-                if (x != 0 || z != 0)
-                    this.searchRadially(order, center.getRelative(x, 0, z), new XYZTuple(x, modY, z));
+                if (x == 0 && z == 0) continue;
+
+                this.searchRadially(order, center.getRelative(x, 0, z), new XYZTuple(x, modY, z));
             }
         }
     }
@@ -102,6 +102,10 @@ public final class OakinCutter {
 
     private boolean shouldNotVisitAt(Block block) {
         return block.getType() != logMaterial || visitedSet.contains(XYZTuple.fromLocation(block.getLocation()));
+    }
+
+    private static boolean isLeaves(Block block) {
+        return block.getType().getKey().getKey().endsWith("_leaves");
     }
 
 }
