@@ -10,16 +10,21 @@ import java.util.*;
 
 public final class OakinCutter {
 
+    private static final List<Material> nurseryMaterialList = Arrays.asList(Material.DIRT, Material.GRASS_BLOCK, Material.PODZOL);
+
     private final Map<Integer, Set<Block>> reserveMap;
+    private final BottomBlocks bottomBlocks;
     private final Set<XYZTuple> visitedSet;
     private final Material logMaterial;
     private final Oakin instance;
 
     public OakinCutter(Material material, Oakin instance) {
-        this.reserveMap = new HashMap<>();
-        this.visitedSet = new HashSet<>();
         this.logMaterial = material;
         this.instance = instance;
+
+        this.reserveMap = new HashMap<>();
+        this.bottomBlocks = new BottomBlocks();
+        this.visitedSet = new HashSet<>();
     }
 
     public void cutDown(Block begin, Player player) {
@@ -40,6 +45,16 @@ public final class OakinCutter {
                         () -> entry.getValue().forEach(this::cutOnce),
                         2 * entry.getKey() // TODO: set from config
                 ));
+
+        bottomBlocks.getBlocks().forEach(block -> System.out.println("BOTTOM: " + block.getY()));
+        this.instance.getServer().getScheduler().runTaskLater(
+                instance,
+                () -> bottomBlocks.getBlocks().stream()
+                        .peek(block -> System.out.println("block: " + block.getType() + " / under: " + block.getRelative(BlockFace.DOWN).getType()))
+                        .filter(block -> nurseryMaterialList.contains(block.getRelative(BlockFace.DOWN).getType()))
+                        .forEach(onDirt -> findSaplingOf(logMaterial).ifPresent(onDirt::setType)),
+                2 * reserveMap.keySet().size()
+        );
     }
 
     private void cutOnce(Block block) {
@@ -94,6 +109,7 @@ public final class OakinCutter {
 
     private void reserveToCut(int order, Block block) {
         visitedSet.add(XYZTuple.fromLocation(block.getLocation()));
+        bottomBlocks.addIfInBottom(block);
 
         Set<Block> set = reserveMap.getOrDefault(order, new HashSet<>());
         set.add(block);
@@ -104,8 +120,42 @@ public final class OakinCutter {
         return block.getType() != logMaterial || visitedSet.contains(XYZTuple.fromLocation(block.getLocation()));
     }
 
+    private static Optional<Material> findSaplingOf(Material material) {
+        String name = material.getKey().getKey();
+        String[] split = name.split("_");
+
+        if (split.length == 0) {
+            return Optional.empty();
+        } else {
+            String saplingName = name.substring(0, name.length() - split[split.length - 1].length()) + "sapling";
+            return Optional.ofNullable(Material.matchMaterial(saplingName));
+        }
+    }
+
     private static boolean isLeaves(Block block) {
         return block.getType().getKey().getKey().endsWith("_leaves");
+    }
+
+    private static class BottomBlocks {
+        private Set<Block> blocks = new HashSet<>();
+        private int bottomY = 256;
+
+        public void addIfInBottom(Block block) {
+            int y = block.getY();
+
+            if (y < bottomY) {
+                bottomY = y;
+                blocks = new HashSet<>();
+            }
+
+            if (y <= bottomY) {
+                blocks.add(block);
+            }
+        }
+
+        public Set<Block> getBlocks() {
+            return this.blocks;
+        }
     }
 
 }
