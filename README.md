@@ -31,6 +31,9 @@ Cutters:
   - STONE_AXE
   - WOODEN_AXE
 
+# 木を1ブロック破壊する度にツールにダメージを与えるか否か
+CrackEveryCutting: true
+
 # 植えなおすか否か
 ReplantSaplings: true
 

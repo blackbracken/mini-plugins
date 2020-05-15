@@ -9,7 +9,7 @@ import java.util.List;
 public final class TreeUtil {
 
     public static final List<Material> NURSERY_MATERIAL_LIST = Arrays.asList(
-            Material.DIRT, Material.GRASS_BLOCK, Material.PODZOL);
+            Material.DIRT, Material.GRASS_BLOCK, Material.PODZOL, Material.COARSE_DIRT);
 
     private TreeUtil() {
     }

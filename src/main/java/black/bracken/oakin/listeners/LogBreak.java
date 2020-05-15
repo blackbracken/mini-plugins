@@ -13,6 +13,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.*;
@@ -23,9 +27,11 @@ public final class LogBreak implements Listener {
     private static final int MAX_AMOUNT_OF_SAPLINGS_REPLANTED = 4;
 
     private final Oakin instance;
+    private final OakinRestrictor restrictor;
 
     public LogBreak(Oakin instance) {
         this.instance = instance;
+        this.restrictor = instance.getRestrictor();
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -33,29 +39,28 @@ public final class LogBreak implements Listener {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
-        Block beginBlock = event.getBlock();
+        ItemStack ax = player.getInventory().getItemInMainHand().clone();
+        Block begin = event.getBlock();
         Material logMaterial = event.getBlock().getType();
-        OakinRestrictor restrictor = instance.getRestrictor();
 
         if (TreeUtil.isNotLog(logMaterial) || !restrictor.shouldCutDown(player)) return;
 
         BukkitScheduler scheduler = instance.getServer().getScheduler();
         scheduler.runTaskAsynchronously(instance, () -> {
-            StemSearcher.Result result = StemSearcher.search(beginBlock, logMaterial, restrictor.getRawConfig().recursionLimit).orElse(null);
+            StemSearcher.Result result = StemSearcher.search(begin, logMaterial, restrictor.getRawConfig().recursionLimit).orElse(null);
             if (result == null) return;
 
             Map<Integer, Set<Block>> logMapGroupedByDistance = new HashMap<>();
+            Map<Integer, Set<Block>> leavesMapGroupedByDistance = new HashMap<>();
             result.cutLogSet.forEach(log -> {
-                int distance = Math.round((float) log.getLocation().distance(beginBlock.getLocation()));
+                int distance = Math.round((float) log.getLocation().distance(begin.getLocation()));
 
                 Set<Block> logSet = logMapGroupedByDistance.getOrDefault(distance, new HashSet<>());
                 logSet.add(log);
                 logMapGroupedByDistance.put(distance, logSet);
             });
-
-            Map<Integer, Set<Block>> leavesMapGroupedByDistance = new HashMap<>();
             result.cutLeavesSet.forEach(leaves -> {
-                int distance = Math.round((float) leaves.getLocation().distance(beginBlock.getLocation()));
+                int distance = Math.round((float) leaves.getLocation().distance(begin.getLocation()));
 
                 Set<Block> leavesSet = leavesMapGroupedByDistance.getOrDefault(distance, new HashSet<>());
                 leavesSet.add(leaves);
@@ -63,15 +68,13 @@ public final class LogBreak implements Listener {
             });
 
             logMapGroupedByDistance.entrySet().stream().sorted(Comparator.comparingInt(Map.Entry::getKey))
-                    .forEach(entry -> scheduler.runTaskLater(
-                            instance,
-                            () -> entry.getValue().forEach(this::breakLogOnce),
+                    .forEach(entry -> scheduler.runTaskLater(instance,
+                            () -> entry.getValue().forEach(log -> breakLogOnce(log, player, ax)),
                             restrictor.getCuttingInterval() * entry.getKey())
                     );
 
             leavesMapGroupedByDistance.entrySet().stream().sorted(Comparator.comparingInt(Map.Entry::getKey))
-                    .forEach(entry -> scheduler.runTaskLater(
-                            instance,
+                    .forEach(entry -> scheduler.runTaskLater(instance,
                             () -> entry.getValue().forEach(this::breakLeavesOnce),
                             restrictor.getCuttingInterval() * entry.getKey())
                     );
@@ -89,9 +92,22 @@ public final class LogBreak implements Listener {
         });
     }
 
-    private void breakLogOnce(Block block) {
+    @SuppressWarnings("ConstantConditions")
+    private void breakLogOnce(Block block, Player player, ItemStack ax) {
         block.breakNaturally();
-        block.getWorld().spawnParticle(Particle.CRIT, block.getLocation().clone().add(0.5, 0.5, 0.5), 4, 0.2, 0.2, 0.2, 0);
+        block.getWorld().spawnParticle(Particle.CRIT, block.getLocation().clone().add(0.5, 0.5, 0.5), 3, 0.2, 0.2, 0.2, 0);
+
+        PlayerInventory inventory = player.getInventory();
+        if (ax.getItemMeta() instanceof Damageable && restrictor.shouldCrackEveryCutting()) {
+            int slot = inventory.first(ax.getType());
+            if (slot == -1) return;
+
+            Damageable meta = (Damageable) inventory.getItem(slot).getItemMeta();
+            meta.setDamage(Math.min(ax.getType().getMaxDurability() - 1, meta.getDamage() + 1));
+
+
+            inventory.getItem(slot).setItemMeta((ItemMeta) meta);
+        }
     }
 
     private void breakLeavesOnce(Block block) {

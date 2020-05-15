@@ -13,6 +13,7 @@ Cutters:
   - IRON_AXE
   - STONE_AXE
   - WOODEN_AXE
+CrackEveryCutting: true
 
 ReplantSaplings: true
 

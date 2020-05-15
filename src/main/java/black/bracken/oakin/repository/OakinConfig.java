@@ -18,6 +18,7 @@ public final class OakinConfig {
     public final int cuttingInterval;
     public final boolean limitsTools;
     public final Set<Material> setOfCutterMaterials;
+    public final boolean shouldCrackEveryCutting;
     public final boolean shouldReplantSaplings;
     public final int recursionLimit;
 
@@ -32,12 +33,12 @@ public final class OakinConfig {
         this.shouldCutDownWhenNotSneaking = config.getBoolean("Enable.WhenNotSneaking", false);
         this.cuttingInterval = config.getInt("CuttingInterval", 2);
         this.limitsTools = config.getBoolean("LimitTools", false);
-
         List<String> cutterIds = config.getStringList("Cutters");
         cutterIds.parallelStream()
                 .filter(cutterId -> Material.matchMaterial(cutterId) == null)
                 .forEach(unmatchedName -> logger.log(Level.WARNING, "Couldn't find a material name matches " + unmatchedName));
         this.setOfCutterMaterials = cutterIds.parallelStream().map(Material::matchMaterial).collect(Collectors.toSet());
+        this.shouldCrackEveryCutting = config.getBoolean("CrackEveryCutting", true);
 
         this.shouldReplantSaplings = config.getBoolean("ReplantSaplings", false);
 

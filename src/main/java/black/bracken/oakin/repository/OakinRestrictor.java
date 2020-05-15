@@ -28,6 +28,10 @@ public final class OakinRestrictor {
         return config.shouldCutDownDefault;
     }
 
+    public boolean shouldCrackEveryCutting() {
+        return config.shouldCrackEveryCutting;
+    }
+
     public int getCuttingInterval() {
         return Math.max(0, config.cuttingInterval);
     }
