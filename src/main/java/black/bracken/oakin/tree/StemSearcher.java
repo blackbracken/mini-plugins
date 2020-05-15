@@ -6,14 +6,13 @@ import black.bracken.oakin.util.XYZTuple;
 import black.bracken.oakin.util.functional.Maybe;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 
 import java.util.*;
 
 public final class StemSearcher {
 
-    private final Map<Integer, Set<Block>> cutBlockMap = new HashMap<>();
-    private final Map<Integer, Set<Block>> cutLeaveMap = new HashMap<>();
+    private final Map<Integer, Set<Block>> cutLogMap = new HashMap<>();
+    private final Map<Integer, Set<Block>> cutLeavesMap = new HashMap<>();
     private final BottomBlocks bottomBlocks = new BottomBlocks();
     private final Set<XYZTuple> visitedSet = new HashSet<>();
 
@@ -29,81 +28,53 @@ public final class StemSearcher {
         StemSearcher searcher = new StemSearcher(logMaterial);
         searcher.startAt(begin);
 
-        return new Result(searcher.cutBlockMap, searcher.cutLeaveMap, searcher.bottomBlocks.getBlocks());
+        return new Result(searcher.cutLogMap, searcher.cutLeavesMap, searcher.bottomBlocks.getBlocks());
     }
 
     private void startAt(Block begin) {
         bottomBlocks.addIfInBottom(begin);
+        markAsLog(0, begin);
 
-        searchCircularly(1, begin, 0);
-        searchVertically(0, begin.getRelative(BlockFace.UP), 1);
-        searchVertically(0, begin.getRelative(BlockFace.DOWN), -1);
+        searchAround(1, begin);
     }
 
-    private void searchVertically(int order, Block block, int modY) {
-        if (shouldNotVisitAt(block)) return;
-        visit(block, order);
-
-        searchVertically(order + 1, block.getRelative(0, modY, 0), modY);
-        searchCircularly(order + 1, block, modY);
-    }
-
-    private void searchCircularly(int order, Block center, int modY) {
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                if (x == 0 && z == 0) continue;
-
-                searchRadially(order, center.getRelative(x, 0, z), new XYZTuple(x, modY, z));
-            }
-        }
-    }
-
-    private void searchRadially(int order, Block block, XYZTuple direction) {
-        if (shouldNotVisitAt(block)) return;
-        visit(block, order);
-
-        searchVertically(order + 1, block.getRelative(0, direction.y, 0), direction.y);
-
-        switch (Math.abs(direction.x) + Math.abs(direction.z)) {
-            case 2:
-                searchRadially(order + 1, block.getRelative(direction.x, 0, direction.z), direction);
-            case 1:
-                if (direction.x != 0)
-                    searchRadially(order + 1, block.getRelative(direction.x, 0, 0), direction);
-                if (direction.z != 0)
-                    searchRadially(order + 1, block.getRelative(0, 0, direction.z), direction);
-        }
-    }
-
-    private void visit(Block block, int order) {
-        if (shouldNotVisitAt(block)) return;
-
-        visitedSet.add(XYZTuple.fromLocation(block.getLocation()));
-        bottomBlocks.addIfInBottom(block);
-
-        Set<Block> set = cutBlockMap.getOrDefault(order, new HashSet<>());
-        set.add(block);
-        cutBlockMap.put(order, set);
-
+    private void searchAround(int order, Block center) {
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
                 for (int z = -1; z <= 1; z++) {
-                    if (x == 0 && y == 0 && z == 0) continue;
+                    Block block = center.getRelative(x, y, z);
+                    if ((x == 0 && y == 0 && z == 0) || hasAlreadyVisited(block)) continue;
 
-                    Maybe.just(block.getRelative(x, y, z))
-                            .takeIf(wouldLeaves -> wouldLeaves.getType() == leavesMaterial.orElse(null))
-                            .ifPresent(leaves -> {
-                                Set<Block> leavesSet = cutLeaveMap.getOrDefault(order, new HashSet<>());
-                                leavesSet.add(leaves);
-                                cutLeaveMap.put(order, leavesSet);
-                            });
+                    if (block.getType() == logMaterial) {
+                        markAsLog(order, block);
+                        searchAround(order + 1, block);
+                    } else if (block.getType() == leavesMaterial.orElse(null)) {
+                        markAsLeaves(order, block);
+                    }
                 }
             }
         }
     }
 
-    private boolean shouldNotVisitAt(Block block) {
-        return block.getType() != logMaterial || visitedSet.contains(XYZTuple.fromLocation(block.getLocation()));
+    private void markAsLog(int order, Block block) {
+        visitedSet.add(XYZTuple.fromLocation(block.getLocation()));
+        bottomBlocks.addIfInBottom(block);
+
+        Set<Block> logSet = cutLogMap.getOrDefault(order, new HashSet<>());
+        logSet.add(block);
+        cutLogMap.put(order, logSet);
+    }
+
+    private void markAsLeaves(int order, Block block) {
+        visitedSet.add(XYZTuple.fromLocation(block.getLocation()));
+
+        Set<Block> leavesSet = cutLeavesMap.getOrDefault(order, new HashSet<>());
+        leavesSet.add(block);
+        cutLeavesMap.put(order, leavesSet);
+    }
+
+    private boolean hasAlreadyVisited(Block block) {
+        return visitedSet.contains(XYZTuple.fromLocation(block.getLocation()));
     }
 
     public static class Result {
