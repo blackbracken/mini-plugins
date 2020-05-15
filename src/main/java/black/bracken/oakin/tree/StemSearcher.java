@@ -7,38 +7,48 @@ import black.bracken.oakin.util.functional.Maybe;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public final class StemSearcher {
 
-    private final Map<Integer, Set<Block>> cutLogMap = new HashMap<>();
-    private final Map<Integer, Set<Block>> cutLeavesMap = new HashMap<>();
+    private final Set<Block> cutLogSet = new HashSet<>();
+    private final Set<Block> cutLeavesSet = new HashSet<>();
     private final BottomBlocks bottomBlocks = new BottomBlocks();
     private final Set<XYZTuple> visitedSet = new HashSet<>();
 
     private final Material logMaterial;
     private final Maybe<Material> leavesMaterial;
+    private final int maxDepth;
 
-    private StemSearcher(Material logMaterial) {
+    private StemSearcher(Material logMaterial, int maxDepth) {
         this.logMaterial = logMaterial;
         this.leavesMaterial = TreeUtil.findLeavesOf(logMaterial);
+        this.maxDepth = maxDepth;
     }
 
-    public static StemSearcher.Result search(Block begin, Material logMaterial) {
-        StemSearcher searcher = new StemSearcher(logMaterial);
-        searcher.startAt(begin);
+    public static Maybe<StemSearcher.Result> search(Block begin, Material logMaterial, int maxDepth) {
+        StemSearcher searcher = new StemSearcher(logMaterial, maxDepth);
 
-        return new Result(searcher.cutLogMap, searcher.cutLeavesMap, searcher.bottomBlocks.getBlocks());
+        return searcher.trySearch(begin)
+                ? Maybe.just(new Result(searcher.cutLogSet, searcher.cutLeavesSet, searcher.bottomBlocks.getBlocks()))
+                : Maybe.nothing();
     }
 
-    private void startAt(Block begin) {
+    private boolean trySearch(Block begin) {
         bottomBlocks.addIfInBottom(begin);
-        markAsLog(0, begin);
+        markAsLog(begin);
 
-        searchAround(1, begin);
+        return searchAround(1, begin);
     }
 
-    private void searchAround(int order, Block center) {
+    /**
+     * @return Returns true if succeed searching all tree logs, otherwise false.
+     */
+    private boolean searchAround(int depth, Block center) {
+        if (depth > maxDepth) return false;
+
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
                 for (int z = -1; z <= 1; z++) {
@@ -46,31 +56,30 @@ public final class StemSearcher {
                     if ((x == 0 && y == 0 && z == 0) || hasAlreadyVisited(block)) continue;
 
                     if (block.getType() == logMaterial) {
-                        markAsLog(order, block);
-                        searchAround(order + 1, block);
+                        markAsLog(block);
+
+                        if (!searchAround(depth + 1, block)) {
+                            return false;
+                        }
                     } else if (block.getType() == leavesMaterial.orElse(null)) {
-                        markAsLeaves(order, block);
+                        markAsLeaves(block);
                     }
                 }
             }
         }
+
+        return true;
     }
 
-    private void markAsLog(int order, Block block) {
+    private void markAsLog(Block block) {
         visitedSet.add(XYZTuple.fromLocation(block.getLocation()));
         bottomBlocks.addIfInBottom(block);
-
-        Set<Block> logSet = cutLogMap.getOrDefault(order, new HashSet<>());
-        logSet.add(block);
-        cutLogMap.put(order, logSet);
+        cutLogSet.add(block);
     }
 
-    private void markAsLeaves(int order, Block block) {
+    private void markAsLeaves(Block block) {
         visitedSet.add(XYZTuple.fromLocation(block.getLocation()));
-
-        Set<Block> leavesSet = cutLeavesMap.getOrDefault(order, new HashSet<>());
-        leavesSet.add(block);
-        cutLeavesMap.put(order, leavesSet);
+        cutLeavesSet.add(block);
     }
 
     private boolean hasAlreadyVisited(Block block) {
@@ -79,13 +88,13 @@ public final class StemSearcher {
 
     public static class Result {
         // omit getters because the fields are readonly.
-        public final Map<Integer, Set<Block>> cutLogMap;
-        public final Map<Integer, Set<Block>> cutLeaveMap;
+        public final Set<Block> cutLogSet;
+        public final Set<Block> cutLeavesSet;
         public final List<Block> bottomBlockList;
 
-        Result(Map<Integer, Set<Block>> cutLogMap, Map<Integer, Set<Block>> cutLeaveMap, List<Block> bottomBlockList) {
-            this.cutLogMap = cutLogMap;
-            this.cutLeaveMap = cutLeaveMap;
+        Result(Set<Block> cutLogSet, Set<Block> cutLeavesSet, List<Block> bottomBlockList) {
+            this.cutLogSet = cutLogSet;
+            this.cutLeavesSet = cutLeavesSet;
             this.bottomBlockList = bottomBlockList;
         }
     }

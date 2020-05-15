@@ -6,6 +6,10 @@ import java.util.function.Predicate;
 
 public interface Maybe<E> {
 
+    static <E> Maybe<E> of(E nullableElement) {
+        return nullableElement != null ? just(nullableElement) : nothing();
+    }
+
     static <E> Maybe<E> just(E element) {
         return new Just<>(element);
     }
@@ -16,7 +20,9 @@ public interface Maybe<E> {
 
     E orElse(E defaultValue);
 
-    void ifPresent(Consumer<E> predicate);
+    Maybe<E> ifPresent(Consumer<E> predicate);
+
+    Maybe<E> ifNotPresent(Runnable predicate);
 
     <R> Maybe<R> map(Function<E, R> mapping);
 
@@ -35,8 +41,14 @@ public interface Maybe<E> {
         }
 
         @Override
-        public void ifPresent(Consumer<E> predicate) {
+        public Maybe<E> ifPresent(Consumer<E> predicate) {
             predicate.accept(element);
+            return this;
+        }
+
+        @Override
+        public Maybe<E> ifNotPresent(Runnable predicate) {
+            return this;
         }
 
         @Override
@@ -59,7 +71,14 @@ public interface Maybe<E> {
         }
 
         @Override
-        public void ifPresent(Consumer<E> predicate) {
+        public Maybe<E> ifPresent(Consumer<E> predicate) {
+            return this;
+        }
+
+        @Override
+        public Maybe<E> ifNotPresent(Runnable predicate) {
+            predicate.run();
+            return this;
         }
 
         @Override

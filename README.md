@@ -33,6 +33,9 @@ Cutters:
 
 # 植えなおすか否か
 ReplantSaplings: true
+
+# 上級者向けの設定; 木を探索するときの再帰の深さのリミットを指定
+RecursionLimit: 400
 ```
 
 ## Releases

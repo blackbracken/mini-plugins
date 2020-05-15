@@ -15,9 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Map;
+import java.util.*;
 
 public final class LogBreak implements Listener {
 
@@ -35,45 +33,57 @@ public final class LogBreak implements Listener {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
-        Block block = event.getBlock();
+        Block beginBlock = event.getBlock();
         Material logMaterial = event.getBlock().getType();
         OakinRestrictor restrictor = instance.getRestrictor();
 
-        if (TreeUtil.isNotLog(logMaterial)) return;
-        if (!restrictor.shouldCutDown(player)) return;
+        if (TreeUtil.isNotLog(logMaterial) || !restrictor.shouldCutDown(player)) return;
 
         BukkitScheduler scheduler = instance.getServer().getScheduler();
         scheduler.runTaskAsynchronously(instance, () -> {
-            StemSearcher.Result result = StemSearcher.search(block, logMaterial);
+            StemSearcher.Result result = StemSearcher.search(beginBlock, logMaterial, restrictor.getRawConfig().recursionLimit).orElse(null);
+            if (result == null) return;
 
-            result.cutLogMap.entrySet().stream()
-                    .sorted(Comparator.comparingInt(Map.Entry::getKey))
+            Map<Integer, Set<Block>> logMapGroupedByDistance = new HashMap<>();
+            result.cutLogSet.forEach(log -> {
+                int distance = Math.round((float) log.getLocation().distance(beginBlock.getLocation()));
+
+                Set<Block> logSet = logMapGroupedByDistance.getOrDefault(distance, new HashSet<>());
+                logSet.add(log);
+                logMapGroupedByDistance.put(distance, logSet);
+            });
+
+            Map<Integer, Set<Block>> leavesMapGroupedByDistance = new HashMap<>();
+            result.cutLeavesSet.forEach(leaves -> {
+                int distance = Math.round((float) leaves.getLocation().distance(beginBlock.getLocation()));
+
+                Set<Block> leavesSet = leavesMapGroupedByDistance.getOrDefault(distance, new HashSet<>());
+                leavesSet.add(leaves);
+                leavesMapGroupedByDistance.put(distance, leavesSet);
+            });
+
+            logMapGroupedByDistance.entrySet().stream().sorted(Comparator.comparingInt(Map.Entry::getKey))
                     .forEach(entry -> scheduler.runTaskLater(
                             instance,
                             () -> entry.getValue().forEach(this::breakLogOnce),
-                            restrictor.getCuttingInterval() * entry.getKey()
-                    ));
-            result.cutLeaveMap.entrySet().stream()
-                    .sorted(Comparator.comparingInt(Map.Entry::getKey))
+                            restrictor.getCuttingInterval() * entry.getKey())
+                    );
+
+            leavesMapGroupedByDistance.entrySet().stream().sorted(Comparator.comparingInt(Map.Entry::getKey))
                     .forEach(entry -> scheduler.runTaskLater(
                             instance,
                             () -> entry.getValue().forEach(this::breakLeavesOnce),
-                            restrictor.getCuttingInterval() * entry.getKey()
-                    ));
+                            restrictor.getCuttingInterval() * entry.getKey())
+                    );
 
-            boolean hasEnoughLeavesToReplant = result.cutLeaveMap.values().stream()
-                    .flatMap(Collection::stream)
-                    .distinct()
-                    .limit(MIN_LEAVES_TO_REPLANT)
-                    .count() == MIN_LEAVES_TO_REPLANT;
-            if (restrictor.shouldReplantSaplings() && hasEnoughLeavesToReplant) {
+            if (restrictor.shouldReplantSaplings() && result.cutLeavesSet.size() >= MIN_LEAVES_TO_REPLANT) {
                 result.bottomBlockList.stream()
                         .filter(bottom -> TreeUtil.NURSERY_MATERIAL_LIST.contains(bottom.getRelative(BlockFace.DOWN).getType()))
                         .limit(MAX_AMOUNT_OF_SAPLINGS_REPLANTED)
                         .forEach(bottom -> scheduler.runTaskLater(
                                 instance,
                                 () -> TreeUtil.findSaplingOf(logMaterial).ifPresent(sapling -> plantSapling(bottom, sapling)),
-                                restrictor.getCuttingInterval() * (result.cutLogMap.keySet().size() + 1)
+                                restrictor.getCuttingInterval() * (Collections.max(leavesMapGroupedByDistance.keySet()) + 1)
                         ));
             }
         });

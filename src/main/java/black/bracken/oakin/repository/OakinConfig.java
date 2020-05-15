@@ -19,6 +19,7 @@ public final class OakinConfig {
     public final boolean limitsTools;
     public final Set<Material> setOfCutterMaterials;
     public final boolean shouldReplantSaplings;
+    public final int recursionLimit;
 
     public OakinConfig(Oakin instance) {
         instance.saveDefaultConfig();
@@ -39,6 +40,8 @@ public final class OakinConfig {
         this.setOfCutterMaterials = cutterIds.parallelStream().map(Material::matchMaterial).collect(Collectors.toSet());
 
         this.shouldReplantSaplings = config.getBoolean("ReplantSaplings", false);
+
+        this.recursionLimit = config.getInt("RecursionLimit", 400);
     }
 
 }

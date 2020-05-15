@@ -15,3 +15,5 @@ Cutters:
   - WOODEN_AXE
 
 ReplantSaplings: true
+
+RecursionLimit: 400
