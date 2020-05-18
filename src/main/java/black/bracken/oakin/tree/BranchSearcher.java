@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public final class StemSearcher {
+public final class BranchSearcher {
 
     private final Set<Block> cutLogSet = new HashSet<>();
     private final Set<Block> cutLeavesSet = new HashSet<>();
@@ -22,14 +22,14 @@ public final class StemSearcher {
     private final Maybe<Material> leavesMaterial;
     private final int maxDepth;
 
-    private StemSearcher(Material logMaterial, int maxDepth) {
+    private BranchSearcher(Material logMaterial, int maxDepth) {
         this.logMaterial = logMaterial;
         this.leavesMaterial = TreeUtil.findLeavesOf(logMaterial);
         this.maxDepth = maxDepth;
     }
 
-    public static Maybe<StemSearcher.Result> search(Block begin, Material logMaterial, int maxDepth) {
-        StemSearcher searcher = new StemSearcher(logMaterial, maxDepth);
+    public static Maybe<BranchSearcher.Result> search(Block begin, Material logMaterial, int maxDepth) {
+        BranchSearcher searcher = new BranchSearcher(logMaterial, maxDepth);
 
         return searcher.trySearch(begin)
                 ? Maybe.just(new Result(searcher.cutLogSet, searcher.cutLeavesSet, searcher.bottomBlocks.getBlocks()))

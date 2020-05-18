@@ -88,7 +88,7 @@ public interface Maybe<E> {
 
         @Override
         public Maybe<E> takeIf(Predicate<E> filter) {
-            return Maybe.nothing();
+            return this;
         }
 
     }

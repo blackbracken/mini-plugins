@@ -1,5 +1,5 @@
 # Oakin
--- _Odin (is said to have broken a branch of Yggdrasil) + Oak._
+-- _Odin (is said to have broken branches of Yggdrasil) + Oak._
 
 ## About
 Spigot 1.15以降に対応した簡素な樵プラグイン.

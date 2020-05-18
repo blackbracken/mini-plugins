@@ -2,7 +2,8 @@ package black.bracken.oakin.listeners;
 
 import black.bracken.oakin.Oakin;
 import black.bracken.oakin.repository.OakinRestrictor;
-import black.bracken.oakin.tree.StemSearcher;
+import black.bracken.oakin.tree.BranchSearcher;
+import black.bracken.oakin.util.ItemStackComparator;
 import black.bracken.oakin.util.TreeUtil;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -20,6 +21,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.*;
+import java.util.stream.IntStream;
 
 public final class LogBreak implements Listener {
 
@@ -47,7 +49,7 @@ public final class LogBreak implements Listener {
 
         BukkitScheduler scheduler = instance.getServer().getScheduler();
         scheduler.runTaskAsynchronously(instance, () -> {
-            StemSearcher.Result result = StemSearcher.search(begin, logMaterial, restrictor.getRawConfig().recursionLimit).orElse(null);
+            BranchSearcher.Result result = BranchSearcher.search(begin, logMaterial, restrictor.getRawConfig().recursionLimit).orElse(null);
             if (result == null) return;
 
             Map<Integer, Set<Block>> logMapGroupedByDistance = new HashMap<>();
@@ -99,14 +101,17 @@ public final class LogBreak implements Listener {
 
         PlayerInventory inventory = player.getInventory();
         if (ax.getItemMeta() instanceof Damageable && restrictor.shouldCrackEveryCutting()) {
-            int slot = inventory.first(ax.getType());
-            if (slot == -1) return;
+            IntStream.range(0, 9 * 4)
+                    .filter(slot -> inventory.getItem(slot) != null)
+                    .filter(slot -> ItemStackComparator.compare(inventory.getItem(slot), ax, ItemStackComparator.DefaultCondition.values()))
+                    .findFirst()
+                    .ifPresent(slot -> {
+                        Damageable meta = (Damageable) inventory.getItem(slot).getItemMeta();
+                        meta.setDamage(Math.min(ax.getType().getMaxDurability() - 1, meta.getDamage() + 1));
 
-            Damageable meta = (Damageable) inventory.getItem(slot).getItemMeta();
-            meta.setDamage(Math.min(ax.getType().getMaxDurability() - 1, meta.getDamage() + 1));
-
-
-            inventory.getItem(slot).setItemMeta((ItemMeta) meta);
+                        inventory.getItem(slot).setItemMeta((ItemMeta) meta);
+                        ax.setItemMeta((ItemMeta) meta);
+                    });
         }
     }
 
