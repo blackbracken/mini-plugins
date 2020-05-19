@@ -32,6 +32,7 @@ public final class ItemStackComparator {
         ),
         DURABILITY(new ItemStackComparator.ConditionUsesMeta((left, right) -> {
             if (!(left.getItemMeta() instanceof Damageable)) return !(right.getItemMeta() instanceof Damageable);
+            if (!(right.getItemMeta() instanceof Damageable)) return !(left.getItemMeta() instanceof Damageable);
 
             return ((Damageable) left.getItemMeta()).getDamage() == (((Damageable) right.getItemMeta()).getDamage());
         })),
@@ -60,7 +61,7 @@ public final class ItemStackComparator {
         boolean compare(ItemStack left, ItemStack right);
     }
 
-    public static final class ConditionUsesMeta implements Condition {
+    private static final class ConditionUsesMeta implements Condition {
         private final BiFunction<ItemStack, ItemStack, Boolean> condition;
 
         public ConditionUsesMeta(BiFunction<ItemStack, ItemStack, Boolean> condition) {
