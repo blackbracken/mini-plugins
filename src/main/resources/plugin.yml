@@ -1,0 +1,6 @@
+name: AloneWithSunrise
+version: @version@
+main: blackbracken.alonewithsunrise.AloneWithSunrise
+api-version: 1.15
+authors: [ blackbracken ]
+description: A plugin makes it morning when one person goes to bed
