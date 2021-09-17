@@ -1,0 +1,5 @@
+name: PaperDoll
+version: @version@
+main: black.bracken.paperdoll.Main
+api-version: 1.15
+authors: [ blackbracken ]
