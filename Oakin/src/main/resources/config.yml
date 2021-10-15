@@ -1,0 +1,20 @@
+Enable:
+  Default: true
+  WhenSneaking: false
+  WhenNotSneaking: true
+
+CuttingInterval: 2
+
+LimitTools: true
+Cutters:
+  - AIR
+  - DIAMOND_AXE
+  - GOLDEN_AXE
+  - IRON_AXE
+  - STONE_AXE
+  - WOODEN_AXE
+CrackEveryCutting: true
+
+ReplantSaplings: true
+
+RecursionLimit: 400

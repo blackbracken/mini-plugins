@@ -1,0 +1,13 @@
+name: Oakin
+version: @version@
+main: black.bracken.oakin.Oakin
+api-version: 1.13
+authors: [BlackBracken]
+description: A plugin to cut down trees easier
+
+commands:
+  oakin:
+    description: A command to toggle whether cut down trees using Oakin or not.
+    aliases: [tree]
+    usage: "/<command>"
+    permission: "oakin.toggle"
