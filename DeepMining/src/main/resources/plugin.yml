@@ -1,0 +1,5 @@
+name: DeepMining
+version: @version@
+main: black.bracken.deepmining.DeepMining
+authors: [BlackBracken]
+description: A plugin does not learn
